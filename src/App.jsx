@@ -340,7 +340,7 @@ ${types}${avoidBlock}${manualBlock}
             <div style={{ marginBottom:6 }}>
               <label style={{ display:"block", fontSize:12, fontWeight:700, color:"#9E8E85", marginBottom:6 }}>생년월일</label>
               <input type="date" value={inputBirth} onChange={e => setInputBirth(e.target.value)}
-                style={{ width:"100%", border:"1.5px solid #DDD8D4", borderRadius:10, padding:"11px 13px", fontSize:14, background:"#FDFAF7", color:"#2D2420", fontFamily:"inherit", boxSizing:"border-box", outline:"none" }}
+                style={{ display:"block", width:"100%", maxWidth:"100%", border:"1.5px solid #DDD8D4", borderRadius:10, padding:"11px 13px", fontSize:14, background:"#FDFAF7", color:"#2D2420", fontFamily:"inherit", boxSizing:"border-box", outline:"none", WebkitAppearance:"none" }}
               />
             </div>
 
