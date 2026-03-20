@@ -212,6 +212,7 @@ ${types}${avoidBlock}${manualBlock}
   };
 
   const deleteHistory = async (id) => {
+    if (!window.confirm("이 기록을 삭제할까요?")) return;
     const updated = history.filter(h => h.id !== id);
     setHistory(updated);
     if (expandedId === id) setExpandedId(null);
