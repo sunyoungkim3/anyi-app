@@ -133,11 +133,11 @@ const STORAGE_KEY  = "anyi_history_v2";
 const SETTINGS_KEY = "anyi_settings_v2";
 
 async function loadStorage(key) {
-  try { const r = await window.storage.get(key); return r ? JSON.parse(r.value) : null; }
+  try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : null; }
   catch { return null; }
 }
 async function saveStorage(key, val) {
-  try { await window.storage.set(key, JSON.stringify(val)); } catch(e) { console.error(e); }
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) { console.error(e); }
 }
 
 export default function App() {
@@ -228,7 +228,7 @@ ${types}${avoidBlock}${manualBlock}
     if (!note.trim() || loading) return;
     setLoading(true); setError(""); setResult(null);
     try {
-      const res = await fetch("/api/chat", {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -244,7 +244,7 @@ ${types}${avoidBlock}${manualBlock}
       const parsed = JSON.parse(text.replace(/```json|```/g,"").trim());
       setResult(parsed);
       const entry = { id:Date.now(), date:selectedDate, ageMonths, note:note.slice(0,200), result:parsed };
-      const updated = [entry, ...history].slice(0,60);
+      const updated = [entry, ...history].slice(0,10);
       setHistory(updated);
       await saveStorage(STORAGE_KEY, updated);
     } catch(e) {
@@ -317,7 +317,7 @@ ${types}${avoidBlock}${manualBlock}
 
       {/* 탭 */}
       <div style={{ display:"flex", marginBottom:16, background:"#F0EBE7", borderRadius:10, padding:3 }}>
-        {[["generate","✨ 질문 만들기"],["history","📅 히스토리"],["criteria","📋 발달 기준"],["settings","⚙️ 설정"]].map(([k,l]) => (
+        {[["generate","✨ 질문 만들기"],["history","📅 히스토리"],["criteria","📋 발달 기준"]].map(([k,l]) => (
           <button key={k} onClick={() => setTab(k)}
             style={{ flex:1, padding:"9px 2px", fontSize:11, fontWeight:tab===k?700:500, background:tab===k?"#fff":"transparent", color:tab===k?"#2D2420":"#9E8E85", border:"none", borderRadius:8, cursor:"pointer", transition:"all 0.15s" }}>{l}</button>
         ))}
@@ -568,7 +568,7 @@ ${types}${avoidBlock}${manualBlock}
                   </div>
                 );
               })}
-              <div style={{ textAlign:"center", fontSize:11, color:"#C0B8B0", paddingTop:4 }}>최근 60개까지 저장됩니다</div>
+              <div style={{ textAlign:"center", fontSize:11, color:"#C0B8B0", paddingTop:4 }}>최근 10개까지 저장됩니다</div>
             </div>
           )}
         </div>
