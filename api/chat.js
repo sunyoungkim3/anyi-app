@@ -1,6 +1,6 @@
-const https = require("https");
+import https from "https";
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   console.log("[chat] method:", req.method);
   console.log("[chat] API key set:", !!process.env.ANTHROPIC_API_KEY);
 
@@ -18,7 +18,6 @@ module.exports = async function handler(req, res) {
     } else if (req.body && typeof req.body === "object") {
       bodyStr = JSON.stringify(req.body);
     } else {
-      // body가 파싱 안 된 경우 직접 읽기
       bodyStr = await new Promise((resolve) => {
         let raw = "";
         req.on("data", (chunk) => { raw += chunk; });
@@ -72,4 +71,4 @@ module.exports = async function handler(req, res) {
     console.error("[chat] caught error:", e.message);
     return res.status(500).json({ error: { message: e.message } });
   }
-};
+}
