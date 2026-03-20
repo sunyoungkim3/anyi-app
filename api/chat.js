@@ -1,8 +1,6 @@
-export const config = {
-  api: { bodyParser: { sizeLimit: "1mb" } }
-};
+const fetch = require("node-fetch");
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
   try {
@@ -13,16 +11,12 @@ export default async function handler(req, res) {
         "x-api-key": process.env.ANTHROPIC_API_KEY,
         "anthropic-version": "2023-06-01",
       },
-      body: typeof req.body === "string" ? req.body : JSON.stringify(req.body),
+      body: JSON.stringify(req.body),
     });
 
-    const text = await response.text();
-    try {
-      return res.status(response.status).json(JSON.parse(text));
-    } catch {
-      return res.status(response.status).send(text);
-    }
+    const data = await response.json();
+    return res.status(response.status).json(data);
   } catch (e) {
     return res.status(500).json({ error: { message: e.message } });
   }
-}
+};
