@@ -311,7 +311,6 @@ ${types}${avoidBlock}${manualBlock}
           <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
             <span style={{ fontSize:12, fontWeight:700, color:"#E8621A", background:"#FFF0E6", border:"1px solid #F4C4A6", borderRadius:20, padding:"4px 11px" }}>👶 {ageMonths}개월 · {criteria.label}</span>
             <span style={{ fontSize:11, color:"#3B6D11", background:"#F0F9E8", border:"1px solid #C0DD97", borderRadius:20, padding:"4px 11px" }}>🔄 다음 업데이트 {nextUpd}</span>
-            <span style={{ fontSize:11, color:"#1A4F8B", background:"#E8F1FD", border:"1px solid #B5D4F4", borderRadius:20, padding:"4px 11px" }}>📅 기록 {history.length}개</span>
           </div>
         )}
       </div>
