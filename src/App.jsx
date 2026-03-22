@@ -192,7 +192,7 @@ export default function App() {
       ? `\n\n⚠️ 최근 3일 이내 이미 선택한 대화 주제 (반드시 피할 것):\n${recentActivities.map(a=>`- ${a}`).join("\n")}\n위 주제와 동일하거나 매우 유사한 활동은 선택하지 마세요.`
       : "";
     const manualBlock = (useManualTopic && manualTopic.trim())
-      ? `\n\n✅ 부모가 직접 지정한 대화 주제: "${manualTopic.trim()}"\n위 주제를 selected_activity로 반드시 사용하세요.`
+      ? `\n\n✅ 부모가 직접 지정한 대화 주제: "${manualTopic.trim()}"\n위 주제를 selected_activity로 반드시 사용하세요. 알림장에 이 주제와 관련된 구체적인 내용(아이의 말, 행동, 감정 표현 등)이 있다면 그 내용을 질문에 적극 반영하세요. 예: 알림장에 "모래가 차갑다고 했어요"라는 내용이 있다면 "모래 만졌을 때 차가웠어?"처럼 구체적 상황을 질문에 녹이세요.`
       : "";
     return `당신은 영유아 발달 전문가입니다. 현재 ${childName}(${ageMonths}개월)의 발달 단계에 맞춰 부모-자녀 대화 질문을 설계합니다.
 발달 단계 (${criteria.label}): ${criteria.overview}
@@ -212,7 +212,6 @@ ${types}${avoidBlock}${manualBlock}
   };
 
   const deleteHistory = async (id) => {
-    if (!window.confirm("이 기록을 삭제할까요?")) return;
     const updated = history.filter(h => h.id !== id);
     setHistory(updated);
     if (expandedId === id) setExpandedId(null);
@@ -226,7 +225,8 @@ ${types}${avoidBlock}${manualBlock}
   };
 
   const generate = async () => {
-    if (!note.trim() || loading) return;
+    const canGenerate = note.trim() || (useManualTopic && manualTopic.trim());
+    if (!canGenerate || loading) return;
     setLoading(true); setError(""); setResult(null);
     try {
       const res = await fetch("/api/chat", {
@@ -236,7 +236,7 @@ ${types}${avoidBlock}${manualBlock}
           model: "claude-sonnet-4-20250514",
           max_tokens: 1500,
           system: systemPrompt,
-          messages: [{ role:"user", content:`다음 알림장에서 대화하기 좋은 활동 1개 선택 후, ${ageMonths}개월 ${childName} 발달을 위한 질문 5개를 JSON으로만 출력하세요.\n\n${note}` }]
+          messages: [{ role:"user", content:`다음 알림장에서 대화하기 좋은 활동 1개 선택 후, ${ageMonths}개월 ${childName} 발달을 위한 질문 5개를 JSON으로만 출력하세요. 알림장에 언급된 구체적인 상황, 아이의 반응, 감정 표현 등을 질문에 최대한 녹여주세요.\n\n${note || "(알림장 내용 없음 — 지정된 주제로만 질문을 만들어주세요)"}` }]
         })
       });
       const data = await res.json();
@@ -311,6 +311,7 @@ ${types}${avoidBlock}${manualBlock}
           <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
             <span style={{ fontSize:12, fontWeight:700, color:"#E8621A", background:"#FFF0E6", border:"1px solid #F4C4A6", borderRadius:20, padding:"4px 11px" }}>👶 {ageMonths}개월 · {criteria.label}</span>
             <span style={{ fontSize:11, color:"#3B6D11", background:"#F0F9E8", border:"1px solid #C0DD97", borderRadius:20, padding:"4px 11px" }}>🔄 다음 업데이트 {nextUpd}</span>
+            <span style={{ fontSize:11, color:"#1A4F8B", background:"#E8F1FD", border:"1px solid #B5D4F4", borderRadius:20, padding:"4px 11px" }}>📅 기록 {history.length}개</span>
           </div>
         )}
       </div>
@@ -340,7 +341,7 @@ ${types}${avoidBlock}${manualBlock}
             <div style={{ marginBottom:6 }}>
               <label style={{ display:"block", fontSize:12, fontWeight:700, color:"#9E8E85", marginBottom:6 }}>생년월일</label>
               <input type="date" value={inputBirth} onChange={e => setInputBirth(e.target.value)}
-                style={{ display:"block", width:"100%", maxWidth:"100%", border:"1.5px solid #DDD8D4", borderRadius:10, padding:"11px 13px", fontSize:14, background:"#FDFAF7", color:"#2D2420", fontFamily:"inherit", boxSizing:"border-box", outline:"none", WebkitAppearance:"none" }}
+                style={{ width:"100%", border:"1.5px solid #DDD8D4", borderRadius:10, padding:"11px 13px", fontSize:14, background:"#FDFAF7", color:"#2D2420", fontFamily:"inherit", boxSizing:"border-box", outline:"none" }}
               />
             </div>
 
@@ -449,17 +450,22 @@ ${types}${avoidBlock}${manualBlock}
               )}
             </div>
             <textarea value={note} onChange={e=>setNote(e.target.value)} rows={5}
-              placeholder="예시) 오늘 바깥 놀이 시간에 모래놀이를 했어요. '차가워!'라고 말하며 좋아했어요..."
+              placeholder={useManualTopic && manualTopic.trim() ? "알림장 내용을 붙여넣으면 주제에 맞게 더 구체적인 질문을 만들어드려요. (선택사항)" : "예시) 오늘 바깥 놀이 시간에 모래놀이를 했어요. '차가워!'라고 말하며 좋아했어요..."}
               style={{ width:"100%", border:"1.5px solid #DDD8D4", borderRadius:10, padding:"10px 12px", fontSize:13, lineHeight:1.7, resize:"vertical", background:"#FDFAF7", color:"#2D2420", fontFamily:"inherit", boxSizing:"border-box" }}
             />
-            <button onClick={generate} disabled={!note.trim()||loading||!isReady}
-              style={{ marginTop:12, width:"100%", padding:"13px 0", background:(!note.trim()||loading||!isReady)?"#E0D8D4":"#F4845F", color:"white", border:"none", borderRadius:12, fontSize:14, fontWeight:700, cursor:(!note.trim()||loading||!isReady)?"not-allowed":"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
-              {loading
-                ? <><span style={{ display:"inline-block", width:14, height:14, border:"2px solid rgba(255,255,255,0.4)", borderTopColor:"white", borderRadius:"50%", animation:"spin 0.8s linear infinite" }}/>분석 중...</>
-                : useManualTopic && manualTopic.trim()
-                  ? `✏️ "${manualTopic.trim()}" 주제로 질문 만들기`
-                  : `✨ ${ageMonths}개월 맞춤 질문 만들기`}
-            </button>
+            {(() => {
+              const canGenerate = note.trim() || (useManualTopic && manualTopic.trim());
+              return (
+                <button onClick={generate} disabled={!canGenerate||loading||!isReady}
+                  style={{ marginTop:12, width:"100%", padding:"13px 0", background:(!canGenerate||loading||!isReady)?"#E0D8D4":"#F4845F", color:"white", border:"none", borderRadius:12, fontSize:14, fontWeight:700, cursor:(!canGenerate||loading||!isReady)?"not-allowed":"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
+                  {loading
+                    ? <><span style={{ display:"inline-block", width:14, height:14, border:"2px solid rgba(255,255,255,0.4)", borderTopColor:"white", borderRadius:"50%", animation:"spin 0.8s linear infinite" }}/>분석 중...</>
+                    : useManualTopic && manualTopic.trim()
+                      ? `✏️ "${manualTopic.trim()}" 주제로 질문 만들기`
+                      : `✨ ${ageMonths}개월 맞춤 질문 만들기`}
+                </button>
+              );
+            })()}
           </div>
 
           {error && <div style={{ background:"#FEE8E8", border:"1px solid #FACACA", borderRadius:10, padding:"11px 14px", color:"#C0392B", fontSize:13, marginBottom:12 }}>{error}</div>}
